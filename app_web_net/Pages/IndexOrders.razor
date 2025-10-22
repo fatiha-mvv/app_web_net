@@ -1,0 +1,925 @@
+﻿@page "/orders"
+@using Microsoft.JSInterop
+@using app_web_net.ViewModels
+@using app_web_net.Models
+@using System.Text.Json
+@using Microsoft.AspNetCore.Components.Web
+@inject OrderViewModel ViewModel
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Inter', sans-serif;
+    }
+
+    body {
+        background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+        min-height: 100vh;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1.5rem;
+    }
+
+    .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+        border-bottom: 1px solid #E2E8F0;
+        padding: 1rem 2.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+        box-shadow: 0 4px 20px rgba(37, 99, 235, 0.08);
+        backdrop-filter: blur(10px);
+    }
+
+    .navbar-brand {
+        font-size: 1.6rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: transform 0.3s ease;
+    }
+
+        .navbar-brand:hover {
+            transform: scale(1.05);
+        }
+
+        .navbar-brand .logo-symbol {
+            font-size: 2rem;
+            filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.3));
+        }
+
+    .navbar-menu {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .navbar-item {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        color: #475569;
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-decoration: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .navbar-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .navbar-item:hover::before {
+            opacity: 1;
+        }
+
+        .navbar-item:hover {
+            color: #2563EB;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+        }
+
+        .navbar-item.active {
+            color: #2563EB;
+            font-weight: 600;
+            background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+        }
+
+    .navbar-toggle {
+        display: none;
+        background: none;
+        border: none;
+        color: #2563EB;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .content-wrapper {
+        padding-top: 120px;
+    }
+
+    .header {
+        background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        border: 1px solid #E2E8F0;
+    }
+
+    .title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1E293B;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #1E293B 0%, #475569 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .subtitle {
+        font-size: 0.95rem;
+        color: #64748B;
+        font-weight: 400;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat {
+        background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        border: 1px solid #E2E8F0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .stat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #2563EB 0%, #1E40AF 100%);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .stat:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(37, 99, 235, 0.15);
+        }
+
+            .stat:hover::before {
+                transform: scaleX(1);
+            }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: #64748B;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .order {
+        background: linear-gradient(135deg, #FFFFFF 0%, #FEFEFF 100%);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        border: 1px solid #E2E8F0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+        .order:hover {
+            transform: translateX(4px);
+            box-shadow: 0 8px 30px rgba(37, 99, 235, 0.12);
+            border-color: #DBEAFE;
+        }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #F1F5F9;
+    }
+
+    .order-id {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1E293B;
+        margin-bottom: 0.25rem;
+    }
+
+    .order-date {
+        font-size: 0.85rem;
+        color: #64748B;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+        .order-date::before {
+            content: '📅';
+            font-size: 0.9rem;
+        }
+
+    .status {
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .status-pending {
+        background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+        color: #1E40AF;
+    }
+
+    .status-confirmed {
+        background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+        color: #047857;
+    }
+
+    .status-shipped {
+        background: linear-gradient(135deg, #BBF7D0 0%, #86EFAC 100%);
+        color: #15803D;
+    }
+
+    .status-cancelled {
+        background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+        color: #B91C1C;
+    }
+
+    .order-items {
+        margin-bottom: 1rem;
+        background: #F8FAFC;
+        padding: 1rem;
+        border-radius: 12px;
+    }
+
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        font-size: 0.9rem;
+        color: #475569;
+        border-bottom: 1px solid #E2E8F0;
+    }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+    .order-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid #F1F5F9;
+    }
+
+    .order-total {
+        font-size: 1.3rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .btn {
+        background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+        border: 2px solid #2563EB;
+        color: #2563EB;
+        border-radius: 10px;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+    }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
+            color: #FFFFFF;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+        }
+
+    .btn-delete {
+        border-color: #DC2626;
+        color: #DC2626;
+    }
+
+        .btn-delete:hover {
+            background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+            color: #FFFFFF;
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
+        }
+
+    .alert {
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .alert-success {
+        background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+        color: #047857;
+        border: 1px solid #6EE7B7;
+    }
+
+    .alert-error {
+        background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+        color: #B91C1C;
+        border: 1px solid #FCA5A5;
+    }
+
+    .empty {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        border: 1px solid #E2E8F0;
+    }
+
+        .empty i {
+            font-size: 4rem;
+            color: #94A3B8;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .empty h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1E293B;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty p {
+            font-size: 1rem;
+            color: #64748B;
+            margin-bottom: 2rem;
+        }
+
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+    }
+
+    .modal-box {
+        background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+        border-radius: 20px;
+        width: 90%;
+        max-width: 500px;
+        padding: 2rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        border: 1px solid #E2E8F0;
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1E293B;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #E2E8F0;
+    }
+
+    .modal-body {
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-footer {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+    }
+
+    .cart-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
+        color: #FFFFFF;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    }
+
+    select {
+        padding: 0.5rem 1rem;
+        border: 2px solid #E2E8F0;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+        color: #475569;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        select:hover {
+            border-color: #2563EB;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+</style>
+
+<ErrorBoundary>
+    <ChildContent>
+        <header class="navbar">
+            <a href="/" class="navbar-brand">
+                <span class="logo-symbol"></span>
+                Gestion Panier
+            </a>
+            <button class="navbar-toggle" @onclick="ToggleMenu">
+                <i class="fas @(isMenuOpen ? "fa-times" : "fa-bars")"></i>
+            </button>
+            <div class="navbar-menu @(isMenuOpen ? "active" : "")">
+                <a href="/produits" class="navbar-item @(IsActive("/produits") ? "active" : "")">
+                    <i class="fas fa-cubes"></i> Articles
+                </a>
+                <a href="/cart" class="navbar-item @(IsActive("/cart") ? "active" : "")">
+                    <i class="fas fa-shopping-cart"></i> Panier
+                    @if (cartCount > 0)
+                    {
+                        <span class="cart-badge">@cartCount</span>
+                    }
+                </a>
+                <a href="/orders" class="navbar-item @(IsActive("/orders") ? "active" : "")">
+                    <i class="fas fa-history"></i> Commandes
+                </a>
+            </div>
+        </header>
+
+        <div class="content-wrapper">
+            <div class="container">
+                <div class="header">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h1 class="title">Commandes</h1>
+                            <p class="subtitle">Suivi des achats</p>
+                        </div>
+                        <a href="/produits" class="btn">Retour</a>
+                    </div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value">@ViewModel.TotalSales</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">@ViewModel.SalesPending</div>
+                        <div class="stat-label">En traitement</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">@ViewModel.SalesConfirmed</div>
+                        <div class="stat-label">Confirmées</div>
+                    </div>
+                    
+                </div>
+
+                @if (successMsg != null)
+                {
+                    <div class="alert alert-success">
+                        <span><i class="fas fa-check-circle"></i> @successMsg</span>
+                        <button @onclick="() => successMsg = null" style="background: none; border: none; cursor: pointer;"><i class="fas fa-times"></i></button>
+                    </div>
+                }
+
+                @if (errorMsg != null)
+                {
+                    <div class="alert alert-error">
+                        <span><i class="fas fa-exclamation-circle"></i> @errorMsg</span>
+                        <button @onclick="() => errorMsg = null" style="background: none; border: none; cursor: pointer;"><i class="fas fa-times"></i></button>
+                    </div>
+                }
+
+                @if (ViewModel.Sales.Any())
+                {
+                    @foreach (var order in ViewModel.Sales)
+                    {
+                        <div class="order">
+                            <div class="order-header">
+                                <div>
+                                    <div class="order-id">Commande #@order.CommandeId</div>
+                                    <div class="order-date">@order.DateEnregistrement.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                                <div style="display: flex; gap: 0.4rem;">
+                                    <span class="status status-@order.Statut.ToLower()">@order.Statut</span>
+                                    <button class="btn" @onclick="() => ViewOrder(order)"><i class="fas fa-eye"></i></button>
+                                    <button class="btn btn-delete" @onclick="() => RequestDelete(order)"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="order-items">
+                                <div style="font-size: 0.7rem; color: #64748B; margin-bottom: 0.2rem;">Articles (@order.QuantiteTotale)</div>
+                                @foreach (var item in order.ElementsCommande.Take(3))
+                                {
+                                    <div class="order-item">
+                                        <span>@item.LibelleProduit</span>
+                                        <span>@item.NombreUnites × @item.CoutUnitaire.ToString("N2") MAD</span>
+                                    </div>
+                                }
+                                @if (order.ElementsCommande.Count > 3)
+                                {
+                                    <div style="font-size: 0.7rem; color: #64748B;">+ @(order.ElementsCommande.Count - 3) autre(s)</div>
+                                }
+                            </div>
+                            <div class="order-footer">
+                                <div class="order-total">@order.Montant.ToString("N2") MAD</div>
+                                <select @bind:get="order.Statut"
+                                        @bind:set="async value => await UpdateOrderStatus(order.CommandeId, value)">
+                                    <option value="Pending">En traitement</option>
+                                    <option value="Confirmed">Confirmée</option>
+                                    <option value="Shipped">Envoyée</option>
+                                    <option value="Cancelled">Annulée</option>
+                                </select>
+
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty">
+                        <i class="fas fa-box-open" style="font-size: 1.5rem; color: #64748B;"></i>
+                        <h2 style="font-size: 1rem;">Aucune commande</h2>
+                        <p style="font-size: 0.75rem; color: #64748B;">Parcourez nos produits pour commencer.</p>
+                        <a href="/produits" class="btn">Produits</a>
+                    </div>
+                }
+
+                @if (showOrder && selectedOrder != null)
+                {
+                    <div class="modal">
+                        <div class="modal-box">
+                            <div class="modal-title">Détails de la commande</div>
+                            <div class="modal-body">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <div>
+                                        <div style="font-size: 0.7rem; color: #64748B;">Commande</div>
+                                        <div>#@selectedOrder.CommandeId</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 0.7rem; color: #64748B;">Date</div>
+                                        <div>@selectedOrder.DateEnregistrement.ToString("dd/MM/yyyy HH:mm")</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.7rem; color: #64748B; margin: 0.5rem 0;">Articles</div>
+                                @foreach (var item in selectedOrder.ElementsCommande)
+                                {
+                                    <div style="display: flex; justify-content: space-between; padding: 0.2rem; background: #F9FAFB; border-radius: 4px; margin-bottom: 0.2rem;">
+                                        <div>
+                                            <div style="font-weight: 500;">@item.LibelleProduit</div>
+                                            <div style="font-size: 0.7rem; color: #64748B;">@item.NombreUnites × @item.CoutUnitaire.ToString("N2") MAD</div>
+                                        </div>
+                                        <div style="font-weight: 500;">@item.TotalPartiel.ToString("N2") MAD</div>
+                                    </div>
+                                }
+                                <div style="background: #E0F2FE; padding: 0.4rem; border-radius: 4px; text-align: right;">
+                                    <div style="font-size: 0.7rem; color: #64748B;">Total</div>
+                                    <div style="font-size: 1rem; font-weight: 500;">@selectedOrder.Montant.ToString("N2") MAD</div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn" @onclick="CloseOrder">Fermer</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (deleteRequest && orderToCancel != null)
+                {
+                    <div class="modal">
+                        <div class="modal-box">
+                            <div class="modal-title">Supprimer la commande</div>
+                            <div class="modal-body">
+                                <p>Confirmez la suppression de la commande <strong>#@orderToCancel.CommandeId</strong> ?</p>
+                                <p style="color: #B91C1C; font-size: 0.7rem;">Action irréversible.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn" @onclick="DismissDelete">Annuler</button>
+                                <button class="btn btn-delete" @onclick="ConfirmCancel">Supprimer</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </ChildContent>
+    <ErrorContent>
+        <div style="padding: 2rem; text-align: center; color: #B91C1C;">
+            <p>Une erreur est survenue lors du rendu de la page. Veuillez recharger la page ou contacter le support.</p>
+        </div>
+    </ErrorContent>
+</ErrorBoundary>
+
+@code {
+    private string? successMsg;
+    private string? errorMsg;
+    private bool showOrder = false;
+    private bool deleteRequest = false;
+    private Order? selectedOrder;
+    private Order? orderToCancel;
+    private int cartCount = 0;
+    private bool isMenuOpen = false;
+
+    
+
+    private async Task UpdateCartCount()
+    {
+        try
+        {
+            var json = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "panier");
+            if (!string.IsNullOrEmpty(json))
+            {
+                var items = JsonSerializer.Deserialize<List<PanierItemViewModel>>(json);
+                cartCount = items?.Sum(i => i.NombreUnites) ?? 0;
+            }
+            else
+            {
+                cartCount = 0;
+            }
+            Console.WriteLine($"Cart count updated: {cartCount}");
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors de la mise à jour du panier : {ex.Message}";
+            Console.WriteLine($"UpdateCartCount Error: {ex}");
+        }
+        StateHasChanged();
+    }
+
+    private void ViewOrder(Order order)
+    {
+        try
+        {
+            selectedOrder = order;
+            showOrder = true;
+            Console.WriteLine($"Viewing order {order.CommandeId}");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors de l'affichage de la commande : {ex.Message}";
+            Console.WriteLine($"ViewOrder Error: {ex}");
+        }
+    }
+
+    private void CloseOrder()
+    {
+        try
+        {
+            selectedOrder = null;
+            showOrder = false;
+            Console.WriteLine("Closed order modal");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors de la fermeture du modal : {ex.Message}";
+            Console.WriteLine($"CloseOrder Error: {ex}");
+        }
+    }
+
+    private async Task UpdateOrderStatus(int orderId, string? status)
+    {
+        if (string.IsNullOrEmpty(status))
+        {
+            errorMsg = "Le statut ne peut pas être vide.";
+            Console.WriteLine($"UpdateOrderStatus Error: Status is null or empty for order {orderId}");
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            var result = await ViewModel.SetStatusAsync(orderId, status);
+            if (result)
+            {
+                successMsg = "Statut modifié avec succès.";
+                await ViewModel.RetrieveOrdersAsync(); // Refresh orders to reflect changes
+                Console.WriteLine($"Updated status for order {orderId} to {status}");
+            }
+            else
+            {
+                errorMsg = "Erreur lors de la modification du statut.";
+                Console.WriteLine($"Failed to update status for order {orderId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors de la modification du statut : {ex.Message}";
+            Console.WriteLine($"UpdateOrderStatus Error: {ex}");
+        }
+        StateHasChanged();
+    }
+
+    private void RequestDelete(Order order)
+    {
+        try
+        {
+            orderToCancel = order;
+            deleteRequest = true;
+            Console.WriteLine($"Requesting deletion for order {order.CommandeId}");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors de la demande de suppression : {ex.Message}";
+            Console.WriteLine($"RequestDelete Error: {ex}");
+        }
+    }
+
+    private void DismissDelete()
+    {
+        try
+        {
+            orderToCancel = null;
+            deleteRequest = false;
+            Console.WriteLine("Dismissed delete request");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors de l'annulation de la suppression : {ex.Message}";
+            Console.WriteLine($"DismissDelete Error: {ex}");
+        }
+    }
+
+    private async Task ConfirmCancel()
+    {
+        if (orderToCancel == null)
+        {
+            errorMsg = "Aucune commande sélectionnée pour la suppression.";
+            Console.WriteLine("ConfirmCancel Error: orderToCancel is null");
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            var result = await ViewModel.CancelOrderAsync(orderToCancel.CommandeId);
+            if (result)
+            {
+                successMsg = "Commande supprimée avec succès.";
+                await ViewModel.RetrieveOrdersAsync(); // Refresh orders after deletion
+                Console.WriteLine($"Order {orderToCancel.CommandeId} cancelled successfully");
+            }
+            else
+            {
+                errorMsg = "Erreur lors de la suppression de la commande.";
+                Console.WriteLine($"Failed to cancel order {orderToCancel.CommandeId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors de la suppression : {ex.Message}";
+            Console.WriteLine($"ConfirmCancel Error: {ex}");
+        }
+        finally
+        {
+            orderToCancel = null;
+            deleteRequest = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleMenu()
+    {
+        try
+        {
+            Console.WriteLine($"Toggling menu, current state: {isMenuOpen}");
+            isMenuOpen = !isMenuOpen;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors du basculement du menu : {ex.Message}";
+            Console.WriteLine($"ToggleMenu Error: {ex}");
+        }
+    }
+
+    private bool IsActive(string path)
+    {
+        try
+        {
+            return Navigation.Uri.EndsWith(path, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"IsActive Error for path {path}: {ex.Message}");
+            return false;
+        }
+    }
+
+
+    //system functions
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Console.WriteLine("Initializing IndexOrders.razor");
+            await ViewModel.RetrieveOrdersAsync();
+            Console.WriteLine($"Retrieved {ViewModel.Sales.Count} orders");
+            if (!ViewModel.Sales.Any())
+            {
+                errorMsg = "Aucune commande trouvée.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors du chargement des commandes : {ex.Message}";
+            Console.WriteLine($"OnInitializedAsync Error: {ex}");
+        }
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                Console.WriteLine("First render, updating cart count");
+                await UpdateCartCount();
+            }
+            catch (Exception ex)
+            {
+                errorMsg = $"Erreur lors de la mise à jour du panier : {ex.Message}";
+                Console.WriteLine($"OnAfterRenderAsync Error: {ex}");
+            }
+            StateHasChanged();
+        }
+    }
+}

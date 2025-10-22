@@ -1,0 +1,282 @@
+﻿@* @page "/"
+
+<PageTitle>Accueil - Gestion PanierRRR</PageTitle>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+        background: #F5F5F5;
+        color: #2A2A2A;
+        background-image: linear-gradient(#E5E5E5 1px, transparent 1px), linear-gradient(90deg, #E5E5E5 1px, transparent 1px);
+        background-size: 15px 15px;
+    }
+
+    .site-container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1.5rem;
+    }
+
+    .site-content {
+        max-width: 1000px;
+        width: 100%;
+    }
+
+    .site-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .site-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #2A2A2A;
+    }
+
+    .site-subtitle {
+        color: #6B7280;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    .nav-links {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .nav-link {
+        background: #FFFFFF;
+        border: 1px solid #E5E5E5;
+        border-left: 3px solid #1E40AF;
+        border-radius: 8px;
+        padding: 1rem;
+        text-decoration: none;
+        color: #2A2A2A;
+        transition: all 0.2s ease;
+    }
+
+    .nav-link:hover {
+        transform: scale(1.01);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        border-left-color: #3B82F6;
+    }
+
+    .link-title {
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .link-description {
+        color: #6B7280;
+        font-size: 0.8rem;
+        line-height: 1.3;
+    }
+
+    .site-footer {
+        text-align: center;
+        padding-top: 1.5rem;
+        border-top: 1px solid #E5E5E5;
+    }
+
+    .site-footer p {
+        color: #6B7280;
+        font-size: 0.75rem;
+    }
+</style>
+
+<div class="site-container">
+    <div class="site-content">
+        <!-- Entête -->
+        <div class="site-header">
+            <h1 class="site-title">GESTION DE PANIE</h1>
+            <p class="site-subtitle">Système de Gestion de PANIER</p>
+        </div>
+
+        <!-- Liens de navigation -->
+        <div class="nav-links">
+            <a href="/produits" class="nav-link">
+                <h2 class="link-title">Produits</h2>
+                <p class="link-description">Gérez vos produits, ajoutez, modifiez ou supprimez des articles</p>
+            </a>
+
+            <a href="/cart" class="nav-link">
+                <h2 class="link-title">Panier</h2>
+                <p class="link-description">Visualisez et validez vos sélections d'achats</p>
+            </a>
+
+            <a href="/orders" class="nav-link">
+                <h2 class="link-title">Commandes</h2>
+                <p class="link-description">Suivez l'historique et le statut de vos commandes</p>
+            </a>
+        </div>
+
+        <!-- Pied de page -->
+        <div class="site-footer">
+            <p>© 2025 Gestion de Stock</p>
+        </div>
+    </div>
+</div> *@
+
+
+
+
+
+@page "/"
+
+@* <PageTitle>Accueil - Gestion PanierRRR</PageTitle> *@
+
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Inter', sans-serif;
+    }
+
+    body {
+        background: #FAFAFA;
+        color: #1F2937;
+        background-image: radial-gradient(#D1D5DB 1px, transparent 1px);
+        background-size: 20px 20px;
+    }
+
+    .site-container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem;
+    }
+
+    .site-content {
+        max-width: 1100px;
+        width: 100%;
+    }
+
+    .site-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .site-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #111827;
+        letter-spacing: -0.025em;
+    }
+
+    .site-subtitle {
+        color: #4B5563;
+        font-size: 1rem;
+        margin-top: 0.75rem;
+        font-weight: 400;
+    }
+
+    .nav-links {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .nav-link {
+        background: #FFFFFF;
+        border: 1px solid #E5E7EB;
+        border-left: 4px solid #2563EB;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-decoration: none;
+        color: #1F2937;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .nav-link:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        border-left-color: #60A5FA;
+    }
+
+    .nav-link::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .nav-link:hover::before {
+        opacity: 1;
+    }
+
+    .link-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .link-description {
+        color: #6B7280;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    .site-footer {
+        text-align: center;
+        padding-top: 2rem;
+        margin-top: 3rem;
+        border-top: 1px solid #E5E7EB;
+    }
+
+    .site-footer p {
+        color: #6B7280;
+        font-size: 0.875rem;
+        font-weight: 400;
+    }
+</style>
+
+<div class="site-container">
+    <div class="site-content">
+        <!-- Entête -->
+        <div class="site-header">
+            <h1 class="site-title">GESTION DE PANIER</h1>
+        </div>
+
+        <!-- Liens de navigation -->
+        <div class="nav-links">
+            <a href="/produits" class="nav-link">
+                <h2 class="link-title">Produits</h2>
+                <p class="link-description">Gérez vos produits ici</p>
+            </a>
+
+            <a href="/cart" class="nav-link">
+                <h2 class="link-title">Panier</h2>
+                <p class="link-description">Gérer votre panier ici</p>
+            </a>
+
+            <a href="/orders" class="nav-link">
+                <h2 class="link-title">Commandes</h2>
+                <p class="link-description">Gérer vos commandes ici</p>
+            </a>
+        </div>
+
+        <!-- Pied de page -->
+        <div class="site-footer">
+            <p>© 2025 Gestion de Panier</p>
+        </div>
+    </div>
+</div>

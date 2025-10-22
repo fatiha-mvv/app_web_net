@@ -1,0 +1,891 @@
+﻿@page "/produits"
+@using System.Text.Json
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Forms
+@using app_web_net.Models
+@using app_web_net.ViewModels
+@inject ArticleViewModel ViewModel
+@inject CartViewModel PanierVM
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+
+<PageTitle>Gestion des Produits</PageTitle>
+
+<ErrorBoundary>
+    <ChildContent>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'Inter', sans-serif;
+            }
+
+            .container {
+                max-width: 1280px;
+                margin: 0 auto;
+                padding: 2rem;
+            }
+
+            .navbar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: #FFFFFF;
+                border-bottom: 2px solid #E5E7EB;
+                padding: 1.25rem 2rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                z-index: 1000;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            }
+
+            .navbar-brand {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: #2563EB;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+
+                .navbar-brand .logo-symbol {
+                    font-size: 1.75rem;
+                }
+
+            .navbar-menu {
+                display: flex;
+                gap: 2rem;
+            }
+
+            .navbar-item {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                color: #4B5563;
+                font-size: 0.9rem;
+                font-weight: 500;
+                text-decoration: none;
+                padding: 0.75rem 1.25rem;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+                position: relative;
+            }
+
+                .navbar-item:hover {
+                    color: #2563EB;
+                    background: #EFF6FF;
+                    transform: translateY(-2px);
+                }
+
+                .navbar-item.active {
+                    color: #2563EB;
+                    font-weight: 600;
+                    background: #EFF6FF;
+                }
+
+                    .navbar-item.active::after {
+                        content: '';
+                        position: absolute;
+                        bottom: -2px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        width: 80%;
+                        height: 2px;
+                        background: #2563EB;
+                    }
+
+            .navbar-toggle {
+                display: none;
+                background: none;
+                border: none;
+                color: #2563EB;
+                font-size: 1.5rem;
+                cursor: pointer;
+            }
+
+            .content-wrapper {
+                padding-top: 120px; /* Clears the fixed navbar */
+            }
+
+            .header {
+                background: #FFFFFF;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+                border-left: 4px solid #2563EB;
+            }
+
+            .title {
+                font-size: 2rem;
+                font-weight: 700;
+                color: #111827;
+                letter-spacing: -0.025em;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+                color: #4B5563;
+                font-weight: 400;
+                margin-top: 0.5rem;
+            }
+
+            .metrics {
+                display: flex;
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+                flex-wrap: wrap;
+            }
+
+            .metric-box {
+                background: #FFFFFF;
+                border-radius: 12px;
+                padding: 1.5rem;
+                flex: 1;
+                min-width: 180px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                transition: transform 0.3s ease;
+            }
+
+                .metric-box:hover {
+                    transform: translateY(-4px);
+                }
+
+            .metric-number {
+                font-size: 1.75rem;
+                font-weight: 600;
+                color: #111827;
+            }
+
+            .metric-text {
+                font-size: 0.875rem;
+                color: #6B7280;
+                font-weight: 400;
+            }
+
+            .btn-primary {
+                background: #2563EB;
+                color: #FFFFFF;
+                border: none;
+                border-radius: 8px;
+                padding: 0.75rem 1.5rem;
+                font-size: 0.875rem;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+                .btn-primary:hover {
+                    background: #1E40AF;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                }
+
+            .btn-secondary {
+                background: transparent;
+                color: #2563EB;
+                border: 1px solid #2563EB;
+                border-radius: 8px;
+                padding: 0.75rem 1.5rem;
+                font-size: 0.875rem;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+                .btn-secondary:hover {
+                    background: #2563EB;
+                    color: #FFFFFF;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                }
+
+            .cart-badge {
+                position: absolute;
+                top: -12px;
+                right: -12px;
+                background: #2563EB;
+                color: #FFFFFF;
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.75rem;
+                font-weight: 600;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .form-section {
+                background: #FFFFFF;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                border-left: 4px solid #2563EB;
+            }
+
+            .form-title {
+                font-size: 1.5rem;
+                font-weight: 600;
+                margin-bottom: 1.25rem;
+                color: #111827;
+            }
+
+            .form-body {
+                margin-bottom: 1.5rem;
+            }
+
+            .form-footer {
+                display: flex;
+                gap: 1rem;
+                justify-content: flex-end;
+            }
+
+            .input-field {
+                width: 100%;
+                padding: 0.75rem;
+                border: 1px solid #D1D5DB;
+                border-radius: 8px;
+                font-size: 0.875rem;
+                transition: all 0.2s ease;
+            }
+
+                .input-field:focus {
+                    outline: none;
+                    border-color: #2563EB;
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+                }
+
+            .product-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5rem;
+                max-width: 600px; /* Limits width for better readability */
+                margin: 0 auto; /* Centers the product list */
+            }
+
+            .product-card {
+                background: #FFFFFF;
+                border-radius: 12px;
+                padding: 1.5rem;
+                border-left: 4px solid #2563EB;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                transition: transform 0.3s ease;
+            }
+
+                .product-card:hover {
+                    transform: translateY(-4px);
+                }
+
+            .product-title {
+                font-size: 1.125rem;
+                font-weight: 600;
+                color: #111827;
+                margin-bottom: 0.5rem;
+            }
+
+            .product-info {
+                font-size: 0.875rem;
+                color: #6B7280;
+                line-height: 1.5;
+                margin-bottom: 0.25rem;
+            }
+
+            .product-actions {
+                display: flex;
+                gap: 1rem;
+                margin-top: 1rem;
+            }
+
+            .alert {
+                padding: 0.75rem 1rem;
+                border-radius: 8px;
+                margin-bottom: 1.5rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 0.875rem;
+            }
+
+                .alert.success {
+                    background: #D1FAE5;
+                    color: #065F46;
+                    border-left: 4px solid #10B981;
+                }
+
+                .alert.error {
+                    background: #FEE2E2;
+                    color: #991B1B;
+                    border-left: 4px solid #EF4444;
+                }
+
+            .modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.6);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1001; /* Above navbar (z-index: 1000) */
+            }
+
+            .modal-content {
+                background: #FFFFFF;
+                border-radius: 12px;
+                width: 90%;
+                max-width: 450px;
+                padding: 1.5rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            .modal-title {
+                font-size: 1.5rem;
+                font-weight: 600;
+                margin-bottom: 1.25rem;
+                color: #111827;
+            }
+
+            .modal-body {
+                margin-bottom: 1.5rem;
+            }
+
+            .modal-footer {
+                display: flex;
+                gap: 1rem;
+                justify-content: flex-end;
+            }
+        </style>
+
+        <!-- Navigation Menu -->
+        <header class="navbar">
+            <a href="/" class="navbar-brand">
+                <span class="logo-symbol"></span>
+                Gestion Panier
+            </a>
+            <button class="navbar-toggle" @onclick="ToggleMenu">
+                <i class="fas @(isMenuOpen ? "fa-times" : "fa-bars")"></i>
+            </button>
+            <div class="navbar-menu @(isMenuOpen ? "active" : "")">
+                <a href="/produits" class="navbar-item @(IsActive("/produits") ? "active" : "")">
+                    <i class="fas fa-cubes"></i> Articles
+                </a>
+                <a href="/cart" class="navbar-item @(IsActive("/cart") ? "active" : "")">
+                    <i class="fas fa-shopping-cart"></i> Panier
+                    @if (cartCount > 0)
+                    {
+                        <span class="cart-badge">@cartCount</span>
+                    }
+                </a>
+                <a href="/orders" class="navbar-item @(IsActive("/orders") ? "active" : "")">
+                    <i class="fas fa-history"></i> Commandes
+                </a>
+            </div>
+        </header>
+
+        <div class="content-wrapper">
+            <div class="container">
+                <div class="header">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h1 class="title">Gestion des Produits</h1>
+                            <p class="subtitle">Inventaire et Gestion des Stocks</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-title">Nouveau Produit</div>
+                    <EditForm Model="@newProduit" OnValidSubmit="SaveNewProduit">
+                        <DataAnnotationsValidator />
+                        <div class="form-body">
+                            <div style="margin-bottom: 1rem;">
+                                <label>Libellé</label>
+                                <InputText class="input-field" @bind-Value="newProduit.Libelle" />
+                                <ValidationMessage For="@(() => newProduit.Libelle)" style="color: #991B1B; font-size: 0.8rem;" />
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <label>Catégorie</label>
+                                <InputText class="input-field" @bind-Value="newProduit.Categorie" />
+                                <ValidationMessage For="@(() => newProduit.Categorie)" style="color: #991B1B; font-size: 0.8rem;" />
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <label>Description</label>
+                                <InputTextArea class="input-field" @bind-Value="newProduit.Description" />
+                                <ValidationMessage For="@(() => newProduit.Description)" style="color: #991B1B; font-size: 0.8rem;" />
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <label>Tarif (MAD)</label>
+                                <InputNumber class="input-field" @bind-Value="newProduit.Tarif" />
+                                <ValidationMessage For="@(() => newProduit.Tarif)" style="color: #991B1B; font-size: 0.8rem;" />
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <label>Stock</label>
+                                <InputNumber class="input-field" @bind-Value="newProduit.StockDisponible" />
+                                <ValidationMessage For="@(() => newProduit.StockDisponible)" style="color: #991B1B; font-size: 0.8rem;" />
+                            </div>
+                        </div>
+                        <div class="form-footer">
+                            <button class="btn-secondary" type="button" @onclick="ResetForm">Annuler</button>
+                            <button type="submit" class="btn-primary" disabled="@isLoading">Ajouter</button>
+                        </div>
+                    </EditForm>
+                </div>
+
+                <div class="metrics">
+                    <div class="metric-box">
+                        <div class="metric-number">@ViewModel.Inventaire.Count</div>
+                        <div class="metric-text">Produits Total</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">@ViewModel.Inventaire.Sum(p => p.StockDisponible)</div>
+                        <div class="metric-text">Unités en Stock</div>
+                    </div>
+                    
+                </div>
+
+                @if (successMsg != null)
+                {
+                    <div class="alert success">
+                        <span><i class="fas fa-check-circle"></i> @successMsg</span>
+                        <button @onclick="() => successMsg = null" style="background: none; border: none; cursor: pointer;"><i class="fas fa-times"></i></button>
+                    </div>
+                }
+
+                @if (errorMsg != null)
+                {
+                    <div class="alert error">
+                        <span><i class="fas fa-exclamation-circle"></i> @errorMsg</span>
+                        <button @onclick="() => errorMsg = null" style="background: none; border: none; cursor: pointer;"><i class="fas fa-times"></i></button>
+                    </div>
+                }
+
+                @if (ViewModel.Inventaire.Any())
+                {
+                    <div class="product-grid">
+                        @foreach (var produit in ViewModel.Inventaire)
+                        {
+                            <div class="product-card">
+                                <div class="product-title">@produit.Libelle</div>
+                                <div class="product-info">Ajouté le @produit.DateEnregistrement.ToString("dd/MM/yyyy")</div>
+                                <div class="product-info">@produit.Description</div>
+                                <div class="product-info">@produit.Tarif.ToString("N2") MAD | @produit.StockDisponible unités</div>
+                                <div class="product-actions">
+                                    <button class="btn-primary" @onclick="() => AddToCart(produit)" disabled="@(produit.StockDisponible == 0)">Ajouter au Panier</button>
+                                    <button class="btn-secondary" @onclick="() => ShowEditModal(produit)">Modifier</button>
+                                    <button class="btn-secondary" @onclick="() => ConfirmDelete(produit)">Supprimer</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div style="text-align: center; padding: 2rem; background: #FFFFFF; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
+                        <i class="fas fa-box" style="font-size: 2rem; color: #6B7280;"></i>
+                        <h2 style="font-size: 1.25rem; color: #111827; font-weight: 500;">Aucun produit</h2>
+                    </div>
+                }
+
+                @if (showEditModal)
+                {
+                    <div class="modal">
+                        <div class="modal-content">
+                            <div class="modal-title">Modifier Produit</div>
+                            <EditForm Model="@editProduit" OnValidSubmit="SaveEditedProduit">
+                                <DataAnnotationsValidator />
+                                <div class="modal-body">
+                                    <div style="margin-bottom: 1rem;">
+                                        <label>Libellé</label>
+                                        <InputText class="input-field" @bind-Value="editProduit.Libelle" />
+                                        <ValidationMessage For="@(() => editProduit.Libelle)" style="color: #991B1B; font-size: 0.8rem;" />
+                                    </div>
+                                    <div style="margin-bottom: 1rem;">
+                                        <label>Catégorie</label>
+                                        <InputText class="input-field" @bind-Value="editProduit.Categorie" />
+                                        <ValidationMessage For="@(() => editProduit.Categorie)" style="color: #991B1B; font-size: 0.8rem;" />
+                                    </div>
+                                    <div style="margin-bottom: 1rem;">
+                                        <label>Description</label>
+                                        <InputTextArea class="input-field" @bind-Value="editProduit.Description" />
+                                        <ValidationMessage For="@(() => editProduit.Description)" style="color: #991B1B; font-size: 0.8rem;" />
+                                    </div>
+                                    <div style="margin-bottom: 1rem;">
+                                        <label>Tarif (MAD)</label>
+                                        <InputNumber class="input-field" @bind-Value="editProduit.Tarif" />
+                                        <ValidationMessage For="@(() => editProduit.Tarif)" style="color: #991B1B; font-size: 0.8rem;" />
+                                    </div>
+                                    <div style="margin-bottom: 1rem;">
+                                        <label>Stock</label>
+                                        <InputNumber class="input-field" @bind-Value="editProduit.StockDisponible" />
+                                        <ValidationMessage For="@(() => editProduit.StockDisponible)" style="color: #991B1B; font-size: 0.8rem;" />
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn-secondary" @onclick="HideEditModal">Annuler</button>
+                                    <button type="submit" class="btn-primary" disabled="@isLoading">Mettre à jour</button>
+                                </div>
+                            </EditForm>
+                        </div>
+                    </div>
+                }
+
+                @if (showDeleteModal)
+                {
+                    <div class="modal">
+                        <div class="modal-content">
+                            <div class="modal-title">Confirmer la Suppression</div>
+                            <div class="modal-body">
+                                <p>Voulez-vous supprimer le produit : <strong>@deleteProduit?.Libelle</strong>?</p>
+                                <p style="color: #991B1B;">Cette action est irréversible.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn-secondary" @onclick="HideDeleteModal">Annuler</button>
+                                <button class="btn-primary" @onclick="ExecuteDelete">Supprimer</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </ChildContent>
+    <ErrorContent>
+        <div style="padding: 2rem; text-align: center; color: #991B1B;">
+            <p>Une erreur est survenue lors du rendu de la page. Veuillez recharger la page ou contacter le support.</p>
+        </div>
+    </ErrorContent>
+</ErrorBoundary>
+
+@code {
+    private bool isLoading = false;
+    private string? successMsg;
+    private string? errorMsg;
+    private bool showEditModal = false;
+    private bool showDeleteModal = false;
+    private Article newProduit = new();
+    private Article editProduit = new();
+    private Article? deleteProduit;
+    private int cartCount = 0;
+    private bool isMenuOpen = false;
+
+
+    private async Task UpdateCartCount()
+    {
+        try
+        {
+            var json = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "panier");
+            if (!string.IsNullOrEmpty(json))
+            {
+                var items = JsonSerializer.Deserialize<List<PanierItemViewModel>>(json);
+                cartCount = items?.Sum(i => i.NombreUnites) ?? 0;
+            }
+            else
+            {
+                cartCount = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors de la mise à jour du panier : {ex.Message}";
+            cartCount = 0;
+            Console.WriteLine($"UpdateCartCount Error: {ex}");
+        }
+        StateHasChanged();
+    }
+
+    private async Task AddToCart(Article produit)
+    {
+        try
+        {
+            var json = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "panier");
+            var items = string.IsNullOrEmpty(json) ? new List<PanierItemViewModel>() : JsonSerializer.Deserialize<List<PanierItemViewModel>>(json)!;
+
+            var item = items.FirstOrDefault(i => i.ProduitId == produit.ArticleId);
+            if (item != null)
+            {
+                item.NombreUnites++;
+            }
+            else
+            {
+                items.Add(new PanierItemViewModel
+                {
+                    ProduitId = produit.ArticleId,
+                    Libelle = produit.Libelle,
+                    CoutUnitaire = produit.Tarif,
+                    NombreUnites = 1
+                });
+            }
+
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "panier", JsonSerializer.Serialize(items));
+            await UpdateCartCount();
+            successMsg = $"{produit.Libelle} ajouté au panier";
+            errorMsg = null;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors de l'ajout au panier : {ex.Message}";
+            successMsg = null;
+            Console.WriteLine($"AddToCart Error: {ex}");
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshList()
+    {
+        try
+        {
+            await ViewModel.FetchItems();
+            if (!ViewModel.Inventaire.Any())
+            {
+                errorMsg = "Aucun produit trouvé dans la base de données.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors du chargement des produits : {ex.Message}";
+            Console.WriteLine($"RefreshList Error: {ex}");
+        }
+        StateHasChanged();
+    }
+
+    private async Task SaveNewProduit()
+    {
+        isLoading = true;
+        successMsg = null;
+        errorMsg = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await ViewModel.StoreItem(newProduit);
+            if (result)
+            {
+                successMsg = "Produit ajouté";
+                newProduit = new Article();
+                await RefreshList();
+            }
+            else
+            {
+                errorMsg = "Erreur lors de l'ajout : opération échouée";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors de l'ajout : {ex.Message}";
+            Console.WriteLine($"SaveNewProduit Error: {ex}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ResetForm()
+    {
+        newProduit = new Article();
+        successMsg = null;
+        errorMsg = null;
+        StateHasChanged();
+    }
+
+    private void ShowEditModal(Article produit)
+    {
+        try
+        {
+            editProduit = new Article
+            {
+                ArticleId = produit.ArticleId,
+                Libelle = produit.Libelle,
+                Categorie = produit.Categorie,
+                Description = produit.Description,
+                Tarif = produit.Tarif,
+                StockDisponible = produit.StockDisponible,
+                DateEnregistrement = produit.DateEnregistrement
+            };
+            showEditModal = true;
+            successMsg = null;
+            errorMsg = null;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors de l'ouverture du formulaire de modification : {ex.Message}";
+            Console.WriteLine($"ShowEditModal Error: {ex}");
+            StateHasChanged();
+        }
+    }
+
+    private async Task SaveEditedProduit()
+    {
+        isLoading = true;
+        successMsg = null;
+        errorMsg = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await ViewModel.AlterItem(editProduit);
+            if (result)
+            {
+                successMsg = "Produit modifié";
+                showEditModal = false;
+                await RefreshList();
+            }
+            else
+            {
+                errorMsg = "Erreur lors de la modification : opération échouée";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors de la modification : {ex.Message}";
+            Console.WriteLine($"SaveEditedProduit Error: {ex}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void HideEditModal()
+    {
+        showEditModal = false;
+        successMsg = null;
+        errorMsg = null;
+        StateHasChanged();
+    }
+
+    private void ConfirmDelete(Article produit)
+    {
+        try
+        {
+            deleteProduit = produit;
+            showDeleteModal = true;
+            successMsg = null;
+            errorMsg = null;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors de l'ouverture de la confirmation de suppression : {ex.Message}";
+            Console.WriteLine($"ConfirmDelete Error: {ex}");
+            StateHasChanged();
+        }
+    }
+
+    private void HideDeleteModal()
+    {
+        deleteProduit = null;
+        showDeleteModal = false;
+        successMsg = null;
+        errorMsg = null;
+        StateHasChanged();
+    }
+
+    private async Task ExecuteDelete()
+    {
+        if (deleteProduit != null)
+        {
+            try
+            {
+                var result = await ViewModel.EraseItem(deleteProduit.ArticleId);
+                if (result)
+                {
+                    successMsg = "Produit supprimé";
+                    await RefreshList();
+                }
+                else
+                {
+                    errorMsg = "Erreur lors de la suppression : opération échouée";
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMsg = $"Erreur lors de la suppression : {ex.Message}";
+                Console.WriteLine($"ExecuteDelete Error: {ex}");
+            }
+            finally
+            {
+                showDeleteModal = false;
+                deleteProduit = null;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void ToggleMenu()
+    {
+        try
+        {
+            Console.WriteLine($"Toggling menu, current state: {isMenuOpen}");
+            isMenuOpen = !isMenuOpen;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors du basculement du menu : {ex.Message}";
+            Console.WriteLine($"ToggleMenu Error: {ex}");
+        }
+    }
+
+    private bool IsActive(string path)
+    {
+        try
+        {
+            return Navigation.Uri.EndsWith(path, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"IsActive Error for path {path}: {ex.Message}");
+            return false;
+        }
+    }
+
+
+
+    //fonction system appelée Une seule fois à l’initialisation du composant
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Console.WriteLine("Initializing IndexArticle.razor");
+            await RefreshList();
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Erreur lors du chargement des produits : {ex.Message}";
+            Console.WriteLine($"OnInitializedAsync Error: {ex}");
+        }
+    }
+
+
+
+    //fonction system appelée  Après chaque rendu du composant
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                Console.WriteLine("First render, updating cart count");
+                await UpdateCartCount();
+            }
+            catch (Exception ex)
+            {
+                errorMsg = $"Erreur lors de la mise à jour du panier : {ex.Message}";
+                Console.WriteLine($"OnAfterRenderAsync Error: {ex}");
+            }
+            StateHasChanged();
+        }
+    }
+}

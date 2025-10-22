@@ -1,0 +1,11 @@
+﻿@* @{
+    Layout = "_Layout";
+} *@
+
+
+@{
+    if (ViewContext.View.Path != "/Pages/_Host.cshtml")
+    {
+        Layout = "_Layout";
+    }
+}
