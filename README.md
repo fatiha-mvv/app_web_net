@@ -10,9 +10,6 @@
 ![Articles Page](https://raw.githubusercontent.com/fatiha-mvv/app_web_net/3be64c32442e63b6524138b34535a703ea3fd51d/3.png)
 
 ### 
-![Orders Page](https://raw.githubusercontent.com/fatiha-mvv/app_web_net/3be64c32442e63b6524138b34535a703ea3fd51d/4.png)
-
-### 
 ![Cart Page](https://raw.githubusercontent.com/fatiha-mvv/app_web_net/3be64c32442e63b6524138b34535a703ea3fd51d/5.png)
 
 ### Database Diagram
